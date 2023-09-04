@@ -12,10 +12,11 @@ class MenuItemViews(APIView):
         serializer=MenuItemSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response({"menudata":serializer.data,"message": "Menu Created Successfully."},status=status.HTTP_201_CREATED)
+            return Response({"menudata":serializer.data,"message": "Menu Created Successfully."},status=status.HTTP_201_CREATED, content_type="application/json")
 
+        return Response({"error":serializer.errors,"message": "Menu creation failed."}, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
+    
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     def get(self, request):
         queryset = Menuitem.objects.all()
         serializer = MenuItemSerializer(queryset, many=True)
@@ -32,13 +33,15 @@ class MenuItemViews(APIView):
         p_id=int(p_id)
         try:
             item_shelf =Menuitem.objects.get(id=p_id)
+            print(item_shelf)
         except Menuitem.DoesNotExist:
             return Response({'error': 'Menu not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer=MenuItemSerializer( instance=item_shelf,data=request.data)
-        if serializer.is_valid():
+        print("edit item",serializer)
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response({"message":"Menu updated successfully!"})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message":"Menu updated successfully!"},content_type="application/json")
+        return Response({"error":serializer.errors,"message": "Menu creation failed."}, status=status.HTTP_400_BAD_REQUEST,content_type="application/json")
     
 class menuItem(APIView):
     def get(self, request,p_id):

@@ -80,9 +80,7 @@ class UserPasswordResetSerializer(serializers.Serializer):
       newPassword = attrs.get('newPassword')
       confPassword = attrs.get('confPassword')
       uid = self.context.get('uid')
-      print(uid)
       token = self.context.get('token')
-      print(token)
       if newPassword != confPassword:
         raise serializers.ValidationError("Password and Confirm Password doesn't match")
       id = smart_str(urlsafe_base64_decode(uid))

@@ -45,7 +45,7 @@ class UserLoginView(APIView):
                 # Create or retrieve a token for the user
                 token = get_tokens_for_user(user)
                 # Return the token and user data
-                return Response({'token': token, 'user_id': user.id, 'email': user.email}, status=status.HTTP_200_OK)
+                return Response({'token': token, 'user_id': user.id, 'email': user.email,"superUser":user.is_superuser}, status=status.HTTP_200_OK)
             return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
       
@@ -56,6 +56,7 @@ class userProfile(APIView):
     permission_classes=[permissions.IsAuthenticated]
     def get(self,request):
         serializer=UserSerializer(request.user)
+        print(serializer.data)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

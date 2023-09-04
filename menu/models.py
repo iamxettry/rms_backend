@@ -6,9 +6,9 @@ from django.db import models
 class  Menuitem(models.Model):
     name = models.CharField('Name', max_length=50)
     category=models.CharField('category',max_length=40)
-    price = models.DecimalField("Price",max_digits=5, decimal_places=1 )
+    price = models.DecimalField("Price",max_digits=6, decimal_places=1 )
     itemtype=models.BooleanField(False)
-    # img=models.ImageField(null=True)
+    img=models.ImageField( upload_to='menu-images/')
     available=models.BooleanField(False)
     calorie=models.IntegerField()
 
