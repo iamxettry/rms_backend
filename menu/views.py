@@ -46,8 +46,8 @@ class MenuItemViews(APIView):
         print("edit item",serializer)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response({"message":"Menu updated successfully!"},content_type="application/json")
-        return Response({"error":serializer.errors,"message": "Menu creation failed."}, status=status.HTTP_400_BAD_REQUEST,content_type="application/json")
+            return Response({"message":"Menu updated successfully!",'result':serializer.data},content_type="application/json")
+        return Response({"error":serializer.errors,"message": "Menu Update failed."}, status=status.HTTP_400_BAD_REQUEST,content_type="application/json")
     
 class menuItem(APIView):
     def get(self, request,p_id):
