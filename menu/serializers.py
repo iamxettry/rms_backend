@@ -5,3 +5,5 @@ class MenuItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Menuitem
         fields='__all__'
+
+    

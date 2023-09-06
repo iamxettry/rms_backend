@@ -56,7 +56,6 @@ class userProfile(APIView):
     permission_classes=[permissions.IsAuthenticated]
     def get(self,request):
         serializer=UserSerializer(request.user)
-        print(serializer.data)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
