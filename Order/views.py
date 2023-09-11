@@ -69,17 +69,33 @@ class OrderDetailAPIView(APIView):
             serializer = OrderSerializer(order)
             return Response(serializer.data)
         return Response(status=status.HTTP_404_NOT_FOUND)
-    def put(self,request,pk):
-        pk=int(pk)
+    def put(self, request, pk):
         try:
-            item =Order.objects.get(id=pk)
-        except Order.DoesNotExist:
-            return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer=OrderSerializer( instance=item,data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response({"message":"Order updated successfully!",'result':serializer.data})
-        return Response({"error":serializer.errors,"message": "Order Update failed."}, status=status.HTTP_400_BAD_REQUEST)
+            i_id = int(pk)  # Assuming 'pk' is either the user ID or food ID passed in the URL
+
+
+            # Check if 'pk' is a valid user ID
+            if Order.objects.filter(account_id=i_id).exists():
+                orders = Order.objects.filter(account_id=i_id)
+
+                # Update all orders for the user
+                for order in orders:
+                    order.completed = True
+                    order.save()
+                return Response({"message": "All orders updated successfully!"})
+
+            # Check if 'pk' is a valid food ID
+            elif Order.objects.filter(id=i_id).exists():
+                # Update the specific order by setting 'completed' to True
+                order = Order.objects.get(id=i_id)
+                order.completed = True
+                order.save()
+                return Response({"message": "Order updated successfully!"})
+
+            return Response({'error': 'Invalid user ID or food ID'}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response({'error': 'Invalid ID format'}, status=status.HTTP_400_BAD_REQUEST)
+
    
 
     def delete(self, request, pk):
@@ -89,6 +105,35 @@ class OrderDetailAPIView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+# not completed data for the user
+class NotCompletedOrder(APIView):
+    def get(self, request, pk):
+        try:
+            orders = Order.objects.filter(account_id=pk, completed=False)
+            serializer = OrderSerializer(orders, many=True)
+            for order_data in serializer.data:
+                order = Order.objects.get(id=order_data['id'])
+                order_data['account'] = UserSerializer(order.account).data
+                order_data['menu_item'] = MenuItemSerializer(order.menu_item).data
+        
+            return Response({"result":serializer.data},status=status.HTTP_200_OK)
+        except Order.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+#  completed data for the user
+class CompletedOrder(APIView):
+    def get(self, request, pk):
+        try:
+            orders = Order.objects.filter(account_id=pk, completed=True)
+            serializer = OrderSerializer(orders, many=True)
+            for order_data in serializer.data:
+                order = Order.objects.get(id=order_data['id'])
+                order_data['account'] = UserSerializer(order.account).data
+                order_data['menu_item'] = MenuItemSerializer(order.menu_item).data
+        
+            return Response({"result":serializer.data},status=status.HTTP_200_OK)
+        except Order.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 # cart data 

@@ -85,6 +85,7 @@ class UserPasswordResetSerializer(serializers.Serializer):
         raise serializers.ValidationError("Password and Confirm Password doesn't match")
       id = smart_str(urlsafe_base64_decode(uid))
       user = accountUser.objects.get(id=id)
+      print(user)
       if not PasswordResetTokenGenerator().check_token(user, token):
         raise serializers.ValidationError('Token is not Valid or Expired')
       user.set_password(newPassword)

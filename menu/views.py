@@ -33,7 +33,7 @@ class MenuItemViews(APIView):
             "result": serializer.data,
             "count":count
         }
-        return Response(data)
+        return Response(data,status=status.HTTP_200_OK)
     
     def put(self,request,p_id):
         p_id=int(p_id)
