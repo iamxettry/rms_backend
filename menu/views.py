@@ -92,3 +92,37 @@ class MenuItemViewSet(viewsets.ModelViewSet):
             return Response({"message": "Item deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
         except Menuitem.DoesNotExist:
             return Response({"error": "Item not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+# filtered data based on category
+
+class FoodCategoryAPIView(APIView):
+    def get(self, request, category):
+        # Filter food items based on the provided category
+        food_items = Menuitem.objects.filter(category=category)
+
+        # Serialize the filtered food items
+        serializer = MenuItemSerializer(food_items, many=True)
+        for item in serializer.data:
+            item['img'] = request.build_absolute_uri(item['img'])
+
+        # Return the serialized data as a JSON response
+        return Response({"msg":"Success","result":serializer.data}, status=status.HTTP_200_OK) 
+
+# filtered data based on type veg
+
+class VegFoodCategoryAPIView(APIView):
+    def get(self, request, veg):
+        is_vegetarian = veg.lower() == 'veg'
+        # Filter food items based on whether they are vegetarian or non-vegetarian
+        food_items = Menuitem.objects.filter(itemtype=is_vegetarian)
+     
+
+        # Serialize the filtered food items
+        serializer = MenuItemSerializer(food_items, many=True)
+        for item in serializer.data:
+            item['img'] = request.build_absolute_uri(item['img'])
+
+        # Return the serialized data as a JSON response
+        return Response({"msg":"Success","result":serializer.data}, status=status.HTTP_200_OK) 
+
