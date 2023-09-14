@@ -96,7 +96,6 @@ class OrderDetailAPIView(APIView):
         except ValueError:
             return Response({'error': 'Invalid ID format'}, status=status.HTTP_400_BAD_REQUEST)
 
-   
 
     def delete(self, request, pk):
         order = self.get_object(pk)

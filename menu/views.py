@@ -94,20 +94,6 @@ class MenuItemViewSet(viewsets.ModelViewSet):
             return Response({"error": "Item not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-# filtered data based on category
-
-class FoodCategoryAPIView(APIView):
-    def get(self, request, category):
-        # Filter food items based on the provided category
-        food_items = Menuitem.objects.filter(category=category)
-
-        # Serialize the filtered food items
-        serializer = MenuItemSerializer(food_items, many=True)
-        for item in serializer.data:
-            item['img'] = request.build_absolute_uri(item['img'])
-
-        # Return the serialized data as a JSON response
-        return Response({"msg":"Success","result":serializer.data}, status=status.HTTP_200_OK) 
 
 # filtered data based on type veg
 
@@ -126,3 +112,42 @@ class VegFoodCategoryAPIView(APIView):
         # Return the serialized data as a JSON response
         return Response({"msg":"Success","result":serializer.data}, status=status.HTTP_200_OK) 
 
+
+# filtered data based on category
+class CategoryListAPIView(APIView):
+      def get(self, request, category=None):
+        if category is None:
+            # No category provided, list all categories
+            categories = Menuitem.objects.values('category').distinct()
+            result = []
+            for cat in categories:
+                category_name = cat['category']
+                
+                # Retrieve all items for the current category
+                items = Menuitem.objects.filter(category=category_name)
+                
+                # Serialize the items for the category
+                serialized_items = MenuItemSerializer(items, many=True).data
+                # Build image URLs for each item in the category
+                for item in serialized_items:
+                    item['img'] = request.build_absolute_uri(item['img'])
+
+                
+                # Add the category and its items to the result list
+                result.append({
+                    "category": category_name,
+                    "data": serialized_items
+                })
+            
+            return Response({"result": result}, status=status.HTTP_200_OK)
+        else:
+            # Filter food items based on the provided category
+            food_items = Menuitem.objects.filter(category=category)
+
+            # Serialize the filtered food items
+            serializer = MenuItemSerializer(food_items, many=True)
+            for item in serializer.data:
+                item['img'] = request.build_absolute_uri(item['img'])
+
+            # Return the serialized data as a JSON response
+            return Response({"msg": "Success", "result": [{"category": category, "data": serializer.data}]}, status=status.HTTP_200_OK)
