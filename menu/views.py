@@ -10,6 +10,7 @@ from .serializers import MenuItemSerializer
 
 from rest_framework import viewsets
 from rest_framework.parsers import MultiPartParser, FormParser
+from random import sample
 
 class MenuItemViews(APIView):
     def post(self, request):
@@ -46,6 +47,7 @@ class MenuItemViews(APIView):
         print("edit item",serializer)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
+            # serializer.data['img'] = request.build_absolute_uri(serializer.data['img'])
             return Response({"message":"Menu updated successfully!",'result':serializer.data},content_type="application/json")
         return Response({"error":serializer.errors,"message": "Menu Update failed."}, status=status.HTTP_400_BAD_REQUEST,content_type="application/json")
     
@@ -99,13 +101,24 @@ class MenuItemViewSet(viewsets.ModelViewSet):
 
 class VegFoodCategoryAPIView(APIView):
     def get(self, request, veg):
-        is_vegetarian = veg.lower() == 'veg'
+        if veg.lower() == 'none':
+            itemtype = Menuitem.NONE
+        elif veg.lower() == 'veg':
+            itemtype = Menuitem.VEG
+        elif veg.lower() == 'nonveg':
+            itemtype = Menuitem.NON_VEG
+        else:
+            # Handle invalid input here, e.g., return an error response
+            return Response({"msg": "Invalid input"}, status=status.HTTP_400_BAD_REQUEST)
+
+            
         # Filter food items based on whether they are vegetarian or non-vegetarian
-        food_items = Menuitem.objects.filter(itemtype=is_vegetarian)
+        food_items = Menuitem.objects.filter(itemtype=itemtype)
      
 
         # Serialize the filtered food items
         serializer = MenuItemSerializer(food_items, many=True)
+        
         for item in serializer.data:
             item['img'] = request.build_absolute_uri(item['img'])
 
@@ -128,6 +141,9 @@ class CategoryListAPIView(APIView):
                 
                 # Serialize the items for the category
                 serialized_items = MenuItemSerializer(items, many=True).data
+
+                # Shuffle the items randomly
+                # randomized_items = sample(serialized_items, len(serialized_items))
                 # Build image URLs for each item in the category
                 for item in serialized_items:
                     item['img'] = request.build_absolute_uri(item['img'])
