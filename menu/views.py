@@ -57,7 +57,8 @@ class menuItem(APIView):
         try:
             instance = Menuitem.objects.get(id=p_id)  # Use 'id' or the correct field name
             serializer = MenuItemSerializer(instance)
-
+             # Update the 'img' field with the absolute URL
+            
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Menuitem.DoesNotExist:
             return Response({"error": "Item not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -77,6 +78,21 @@ class MenuItemViewSet(viewsets.ModelViewSet):
     queryset = Menuitem.objects.all()
     serializer_class = MenuItemSerializer
     parser_classes = (MultiPartParser, FormParser)
+    def list(self, request):
+        # Get the 'num_items' query parameter or default to returning all items
+        num_items = request.query_params.get('num_items', None)
+
+        if num_items:
+            try:
+                num_items = int(num_items)
+                queryset = self.queryset[:num_items]
+            except ValueError:
+                return Response({"error": "Invalid 'num_items' parameter. Please provide a valid integer."}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            queryset = self.queryset
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
     def create(self, request, *args, **kwargs):
         name=request.data['name']
         category=request.data['category']
@@ -87,6 +103,7 @@ class MenuItemViewSet(viewsets.ModelViewSet):
         calorie=request.data['calorie']
         Menuitem.objects.create(name=name,category=category,price=price,itemtype=itemtype,img=img,available=available,calorie=calorie)
         return Response("Menu created successfully",status=status.HTTP_200_OK)
+    
     def destroy(self, request, pk=None):
         try:
             instance = self.get_object()
