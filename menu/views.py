@@ -11,6 +11,7 @@ from .serializers import MenuItemSerializer
 from rest_framework import viewsets
 from rest_framework.parsers import MultiPartParser, FormParser
 from random import sample
+import random
 
 class MenuItemViews(APIView):
     def post(self, request):
@@ -79,30 +80,39 @@ class MenuItemViewSet(viewsets.ModelViewSet):
     serializer_class = MenuItemSerializer
     parser_classes = (MultiPartParser, FormParser)
     def list(self, request):
-        # Get the 'num_items' query parameter or default to returning all items
-        num_items = request.query_params.get('num_items', None)
+        serializer = self.get_serializer(self.queryset, many=True, context={'request': request})
 
-        if num_items:
-            try:
-                num_items = int(num_items)
-                queryset = self.queryset[:num_items]
-            except ValueError:
-                return Response({"error": "Invalid 'num_items' parameter. Please provide a valid integer."}, status=status.HTTP_400_BAD_REQUEST)
+        # Get the 'num_items' and 'category' query parameters
+        num_items = request.query_params.get('num_items', None)
+        category = request.query_params.get('category', None)
+
+        if category:
+            queryset = self.queryset.filter(category=category)
         else:
             queryset = self.queryset
 
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+         # Convert the queryset to a list and shuffle it randomly
+        queryset_list = list(queryset)
+        random.shuffle(queryset_list)
+        print(queryset_list)
+        if num_items is not None:
+            try:
+                num_items = int(num_items)
+                if num_items > 0:
+                    # Limit the queryset to num_items
+                    queryset_list = queryset_list[:num_items]
+            except ValueError:
+                return Response({"error": "Invalid 'num_items' parameter. Please provide a valid integer."}, status=status.HTTP_400_BAD_REQUEST)
+
+        serialized_data = serializer.to_representation(queryset_list)
+        return Response(serialized_data)
+
     def create(self, request, *args, **kwargs):
-        name=request.data['name']
-        category=request.data['category']
-        price=request.data['price']
-        itemtype=request.data['itemtype']
-        img=request.data['img']
-        available=request.data['available']
-        calorie=request.data['calorie']
-        Menuitem.objects.create(name=name,category=category,price=price,itemtype=itemtype,img=img,available=available,calorie=calorie)
-        return Response("Menu created successfully",status=status.HTTP_200_OK)
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response("Menu created successfully", status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def destroy(self, request, pk=None):
         try:

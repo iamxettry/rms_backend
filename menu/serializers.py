@@ -7,3 +7,4 @@ class MenuItemSerializer(serializers.ModelSerializer):
         fields='__all__'
 
     
+    
